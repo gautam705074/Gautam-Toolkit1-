@@ -80,3 +80,64 @@ The toolkit is designed for:
 
 ```bash
 git clone https://github.com/gautam705074/Gautam-Toolkit1-.git
+## 🚀 How to Run
+
+### Quick Start (One Command)
+
+```bash
+git clone https://github.com/gautam705074/Gautam-Toolkit1-.git && cd Gautam-Toolkit1- && chmod +x launch.sh && ./launch.sh
+[Disclaimer](#disclaimer)
+## ⚠️ Disclaimer
+
+### Important Notice
+
+This toolkit is created for **EDUCATIONAL and ETHICAL** purposes only.
+
+### What You CAN Do:
+- ✅ Learn about cybersecurity
+- ✅ Practice ethical hacking
+- ✅ Test your own systems
+- ✅ Educational research
+- ✅ Security awareness training
+
+### What You CANNOT Do:
+- ❌ Hacking without permission
+- ❌ Illegal activities
+- ❌ Stealing data
+- ❌ Unauthorized access
+- ❌ Malicious use
+
+### Legal Warning
+
+> **"Unauthorized use or malicious activity is STRICTLY PROHIBITED."**
+
+The developer (Gautam Kumar) is **NOT responsible** for any misuse of this toolkit. Users are solely responsible for their actions and must comply with all applicable laws.
+
+### By Using This Toolkit, You Agree To:
+1. Use it only for educational purposes
+2. Get proper authorization before testing
+3. Not use it for illegal activities
+4. Accept full responsibility for your actions
+
+---
+
+## 👤 Author & Contact
+
+### About the Author
+
+**Gautam Kumar**
+
+- 🎓 Cybersecurity Enthusiast
+- 🔒 Ethical Hacker
+- 🛡️ Security Researcher
+- 💻 Developer
+
+### Connect With Me
+
+| Platform | Link |
+|----------|------|
+| 🔗 GitHub | [gautam705074](https://github.com/gautam705074) |
+| 📁 Repository | [Gautam-Toolkit1-](https://github.com/gautam705074/Gautam-Toolkit1-) |
+| 💼 LinkedIn | [Gautam Kumar](https://www.linkedin.com/in/gautam705074) |
+| 📧 Email | [Your Email] |
+
